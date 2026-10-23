@@ -1,0 +1,9 @@
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+
+# Audio DSP uses the FPU in a dedicated task; give FreeRTOS a reasonable tick.
+CONFIG_FREERTOS_HZ=1000
+
+# HTTP server for the gateway dashboard.
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024
