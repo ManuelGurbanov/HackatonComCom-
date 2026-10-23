@@ -108,15 +108,15 @@ void app_main(void)
             }
         }
 
-        int mic_level = audio_ok ? audio_mic_level() : 0;
+        int16_t mic_sample = audio_ok ? audio_mic_sample() : 0;
         if (display_ok) {
-            draw_ui(buttons_read(), mic_level, audio_ok);
+            draw_ui(buttons_read(), mic_sample, audio_ok);
             display_flush();
         }
 
         if (audio_ok && ++log_div >= 1000 / UI_PERIOD_MS) {
             log_div = 0;
-            ESP_LOGI(TAG, "mic level: %d", mic_level);
+            ESP_LOGI(TAG, "mic level2: %d", mic_sample);
         }
     }
 }

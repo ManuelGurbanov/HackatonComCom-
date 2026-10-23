@@ -4,6 +4,6 @@
 
 esp_err_t audio_init(void);
 
-int audio_mic_level(void);
+int16_t audio_mic_sample(void);
 
 esp_err_t audio_play_tone(int freq_hz, int duration_ms);

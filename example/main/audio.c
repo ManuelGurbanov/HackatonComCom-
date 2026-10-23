@@ -30,7 +30,7 @@ static const char *TAG = "audio";
 static i2s_chan_handle_t s_tx;
 static i2s_chan_handle_t s_rx;
 
-static volatile int s_mic_level;
+static volatile int16_t sample;
 
 static esp_err_t speaker_init(void)
 {
@@ -73,8 +73,7 @@ static esp_err_t mic_init(void)
 
 static void mic_task(void *arg)
 {
-    int16_t buf[MIC_CHUNK_FRAMES * 2];
-    float smoothed = 0;
+    int16_t buf[MIC_CHUNK_FRAMES * 2];   // intercalado: L, R, L, R...
 
     while (1) {
         size_t bytes = 0;
@@ -82,33 +81,14 @@ static void mic_task(void *arg)
             continue;
         }
         int frames = bytes / (2 * sizeof(int16_t));
-        if (frames == 0) {
-            continue;
+
+        // Muestras puras del canal 0 (cambia a 1 si el mic está en el otro slot)
+        for (int i = 0; i < frames; i++) {
+            sample = buf[i * 2 + 0];
         }
-
-        float best_rms = 0;
-        for (int ch = 0; ch < 2; ch++) {
-            int64_t sum = 0, sum_sq = 0;
-            for (int i = 0; i < frames; i++) {
-                int v = buf[i * 2 + ch];
-                sum += v;
-                sum_sq += (int64_t)v * v;
-            }
-            float mean = (float)sum / frames;
-            float var = (float)sum_sq / frames - mean * mean;
-            float rms = var > 0 ? sqrtf(var) : 0;
-            if (rms > best_rms) {
-                best_rms = rms;
-            }
-        }
-
-        float level = (20.0f * log10f(best_rms + 1.0f) - 20.0f) * (100.0f / 60.0f);
-        level = level < 0 ? 0 : (level > 100 ? 100 : level);
-
-        smoothed = level > smoothed ? level : smoothed * 0.8f + level * 0.2f;
-        s_mic_level = (int)(smoothed + 0.5f);
     }
 }
+
 
 esp_err_t audio_init(void)
 {
@@ -120,9 +100,9 @@ esp_err_t audio_init(void)
     return ESP_OK;
 }
 
-int audio_mic_level(void)
+int16_t audio_mic_sample(void)
 {
-    return s_mic_level;
+    return sample;
 }
 
 esp_err_t audio_play_tone(int freq_hz, int duration_ms)
