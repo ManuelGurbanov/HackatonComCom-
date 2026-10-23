@@ -85,11 +85,28 @@ idf.py menuconfig        # set "Machine Health Node" -> Node ID (1..4), joystick
 idf.py -p /dev/ttyACM0 flash monitor
 ```
 
-- **Nodes:** flash each board with a different Node ID. They boot as nodes by
-  default.
-- **Gateway:** hold **KEY1** during boot (or enable *Build this board as the
-  gateway by default* in menuconfig). Connect a phone/laptop to Wi-Fi
-  `MHN-GATEWAY` (pass `machinehealth`) and open `http://192.168.4.1/`.
+Each board can boot into one of three roles:
+
+- **Node** (default): listens to a machine and transmits reports over ESP-NOW.
+- **Host** (hold **KEY1** during boot): listens to a machine *and* runs the
+  gateway + dashboard locally. Its own machine appears on its own dashboard.
+- **Gateway** (menuconfig *Build this board as the gateway by default*):
+  dashboard only, no local listening — for setups with 3+ boards.
+
+Connect a phone/laptop to Wi-Fi `MHN-GATEWAY` (pass `machinehealth`) and open
+`http://192.168.4.1/`.
+
+### Two-board demo (recommended with only 2 boards)
+
+1. Flash both boards; set a different **Node ID** on each (1 and 2).
+2. Boot board 1 normally -> it's a **node** watching machine A.
+3. Boot board 2 holding **KEY1** -> it's the **host** watching machine B and
+   serving the dashboard.
+4. Join `MHN-GATEWAY` Wi-Fi, open `http://192.168.4.1/`, and you'll see **both**
+   machines. Learn a baseline on each (KEY1 after boot), then introduce a fault
+   on one and watch only that card drop.
+
+With 4 boards, make one a dashboard-only **gateway** and the other three nodes.
 
 ## Controls (node)
 

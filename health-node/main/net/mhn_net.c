@@ -133,3 +133,19 @@ int mhn_net_gateway_snapshot(node_entry_t *out)
     xSemaphoreGive(s_lock);
     return n;
 }
+
+esp_err_t mhn_net_gateway_self_report(const mhn_report_t *r)
+{
+    if (!s_lock) return ESP_ERR_INVALID_STATE;
+    /* Locally-administered MAC derived from the node id; never collides with
+       a real sender's address. */
+    uint8_t selfmac[6] = {0x02, 0x00, 0x00, 0x00, 0x00, r->node_id};
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    node_entry_t *e = find_or_add(selfmac);
+    if (e) {
+        e->last = *r;
+        e->last_rx_ms = (uint32_t)(esp_timer_get_time() / 1000);
+    }
+    xSemaphoreGive(s_lock);
+    return e ? ESP_OK : ESP_ERR_NO_MEM;
+}

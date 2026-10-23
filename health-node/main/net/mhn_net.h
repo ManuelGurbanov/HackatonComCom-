@@ -33,3 +33,8 @@ esp_err_t mhn_net_gateway_start(void);
 /* Copies the current node table into `out` (length MHN_MAX_NODES).
    Returns the number of active entries. Thread-safe. */
 int mhn_net_gateway_snapshot(node_entry_t *out);
+
+/* Inject this board's own report into the local table (for a combined
+   node+gateway "host" board, so it appears on its own dashboard without
+   transmitting). Requires mhn_net_gateway_start() to have run. */
+esp_err_t mhn_net_gateway_self_report(const mhn_report_t *r);
