@@ -1,0 +1,39 @@
+menu "Machine Health Node"
+
+    config MHN_NODE_ID
+        int "Node ID (1..4), shown on the dashboard"
+        range 1 4
+        default 1
+        help
+            Unique id for this listening node. Set a different value when
+            flashing each of the 4 boards so the gateway can tell them apart.
+
+    config MHN_ROLE_GATEWAY
+        bool "Build this board as the gateway by default"
+        default n
+        help
+            If set, the board always boots as the gateway (SoftAP + dashboard).
+            Otherwise it boots as a node, unless KEY1 is held during boot.
+
+    config HACK_SPEAKER_VOLUME
+        int "Speaker volume (percent of full scale)"
+        range 1 100
+        default 25
+        help
+            Peak amplitude of the alert chirp. The MAX98357A is loud even at
+            low values; keep it low at a desk.
+
+    config HACK_DISPLAY_ROTATE_180
+        bool "Rotate display by 180 degrees"
+        default n
+        help
+            Enable if the text on the OLED appears upside down.
+
+    config HACK_JOYSTICK_ROT_CCW
+        bool "Joystick rotated 45 degrees counter-clockwise"
+        default n
+        help
+            The joystick is mounted rotated by 45 degrees. Default assumes a
+            clockwise rotation; enable this if directions feel swapped.
+
+endmenu
