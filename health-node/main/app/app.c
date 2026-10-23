@@ -185,7 +185,11 @@ static void build_report(mhn_report_t *r, uint16_t seq)
     xSemaphoreGive(S.lock);
 }
 
-void app_run_node(void)
+/* Runs the full listening pipeline. When `host` is true this board also
+   brings up the gateway (ESP-NOW receiver + Wi-Fi dashboard) and feeds its
+   own report into the local table instead of transmitting it, so a single
+   extra board is not needed just to see the dashboard. */
+static void run_node(bool host)
 {
     S.lock = xSemaphoreCreateMutex();
     features_init();
@@ -206,7 +210,14 @@ void app_run_node(void)
         ESP_LOGE(TAG, "audio capture failed; cannot run");
     }
     bool speaker_ok = (audio_out_init() == ESP_OK);
-    bool net_ok = (mhn_net_node_start() == ESP_OK);
+
+    bool net_ok;
+    if (host) {
+        net_ok = (mhn_net_gateway_start() == ESP_OK);
+        if (dashboard_start() != ESP_OK) ESP_LOGE(TAG, "dashboard failed");
+    } else {
+        net_ok = (mhn_net_node_start() == ESP_OK);
+    }
 
     xTaskCreate(dsp_task, "dsp", 8192, NULL, 7, NULL);
 
@@ -259,7 +270,11 @@ void app_run_node(void)
         if (net_ok && (now - last_report >= REPORT_MS || state_changed)) {
             mhn_report_t r;
             build_report(&r, seq++);
-            mhn_net_send_report(&r);
+            if (host) {
+                mhn_net_gateway_self_report(&r);   /* show up on own dashboard */
+            } else {
+                mhn_net_send_report(&r);           /* transmit to the gateway  */
+            }
             last_report = now;
         }
 
@@ -267,6 +282,9 @@ void app_run_node(void)
         vTaskDelay(pdMS_TO_TICKS(50));   /* ~20 fps UI */
     }
 }
+
+void app_run_node(void) { run_node(false); }
+void app_run_host(void) { run_node(true); }
 
 void app_run_gateway(void)
 {
